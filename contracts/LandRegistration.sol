@@ -58,6 +58,7 @@ contract LandRegistration {
     mapping(address=>bool) public RegisteredAddressMapping;
 
     mapping(uint256=>bool) public RequestStatus;
+    mapping(uint256=>bool) public TransferStatus;
     mapping(uint256=>bool) public RequestedLand;
     mapping(uint256=>bool) public PaymentReceived;
 
@@ -298,6 +299,9 @@ contract LandRegistration {
         RequestMapping[requestsCount]= LandRequest(requestsCount,msg.sender,_sellerAddress,_landId);
         RequestStatus[requestsCount]=false;
         RequestedLand[requestsCount]=true;
+
+        //additional
+        TransferStatus[requestsCount]=false;
         emit LandRequested(_sellerAddress);
 
     }
@@ -307,8 +311,8 @@ contract LandRegistration {
     }
 
     // function to get all request details
-    function requestDetails(uint256 i) public view returns(address,address,uint256,bool){
-        return(RequestMapping[i].sellerAddress, RequestMapping[i].buyerAddress, RequestMapping[i].landId, RequestStatus[i]);
+    function requestDetails(uint256 i) public view returns(address,address,uint256,bool,bool){
+        return(RequestMapping[i].sellerAddress, RequestMapping[i].buyerAddress, RequestMapping[i].landId, RequestStatus[i], TransferStatus[i]);
     }
 
     function isRequested(uint256 id) public view returns(bool){
@@ -335,9 +339,16 @@ contract LandRegistration {
         address previousOwner= LandOwner[land_id];
         LandOwner[land_id]= newOwner;
         landOwners[newOwner].push(lands[land_id]);
+    
 
         // remove land from previous user
         //landOwners[previousOwner].remove(lands[land_id]);
+    }
+
+        // fucnion to approve request
+    function checkTransfer(uint256 _requestId)public{
+        require(isLandInspector(msg.sender));
+        TransferStatus[_requestId]=true;
     }
 
     function isPaid(uint256 _landId) public view returns(bool){
